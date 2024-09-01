@@ -1,1 +1,0 @@
-//this folder can be used to store all external data file needed for your mod such as images or else                                                                                                                                                                                                                          
