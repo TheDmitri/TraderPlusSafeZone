@@ -1,0 +1,6 @@
+//<'SafeZone.pbo' properties via Mikero's dos tools, dll version 8.57>
+prefix=SafeZone;
+Mikero=DePbo.dll.8.57;
+version=23021714;
+//PboType=Arma Addon;
+//</properties>
