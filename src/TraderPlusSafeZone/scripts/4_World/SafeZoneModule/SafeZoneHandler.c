@@ -3,11 +3,9 @@ class SafeZoneHandler
     PlayerBase player;
 
     private bool isInZone = false;
-
     private bool hasStarted = false;
 
     ref SafeZoneSettings settings;
-
     ref SafeZoneLocation selectedLocation;
 
     bool IsPlayerInside()
@@ -37,12 +35,12 @@ class SafeZoneHandler
         player = GetPlayer();
 
         GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(Update, 1000, true);
+        GetGame().GetCallQueue(CALL_CATEGORY_SYSTEM).CallLater(RemoveUnwantedEntities, 5000, true);
     }
 
     void Update()
     {
         CheckSafeZoneLocation();
-        RemoveUnwantedEntities();
     }
 
     void CheckSafeZoneLocation()
@@ -57,7 +55,7 @@ class SafeZoneHandler
     void OnEnterSafeZone()
     {
         isInZone = true;
-        NotificationSystem.AddNotificationExtended( settings.NotificationTimer, settings.NotificationTitle, settings.msgOnEnteringZone, "TraderPlusSafeZone/datasets/shield.paa" );
+        NotificationSystem.AddNotificationExtended( settings.notificationTimer, settings.notificationTitle, settings.msgOnEnteringZone, "TraderPlusSafeZone/datasets/shield.paa" );
         GetRPCManager().SendRPC("TraderPlusSafeZone", "GetSafeZoneStatus", new Param1<bool>(isInZone), true, null);
     }
 
@@ -65,7 +63,7 @@ class SafeZoneHandler
     {
         isInZone = false;
         selectedLocation = null;
-        NotificationSystem.AddNotificationExtended( settings.NotificationTimer, settings.NotificationTitle, settings.msgOnLeavingZone, "TraderPlusSafeZone/datasets/shield.paa" );
+        NotificationSystem.AddNotificationExtended( settings.notificationTimer, settings.notificationTitle, settings.msgOnLeavingZone, "TraderPlusSafeZone/datasets/shield.paa" );
         GetRPCManager().SendRPC("TraderPlusSafeZone", "GetSafeZoneStatus", new Param1<bool>(isInZone), true, null);
     }
 
@@ -94,33 +92,33 @@ class SafeZoneHandler
 
     void RemoveUnwantedEntities()
     {
-        if (!selectedLocation || !settings.RestrictNPCInSafeZone)
+        if (!selectedLocation || !settings.isEntitiesCleanActive)
             return;
 
         array<Object> nearbyObjects = new array<Object>();
-        GetGame().GetObjectsAtPosition(selectedLocation.position, selectedLocation.radius, nearbyObjects, null);
+        GetGame().GetObjectsAtPosition(selectedLocation.position, selectedLocation.radius, nearbyObjects);
 
         foreach (Object obj : nearbyObjects)
         {
             if (obj.IsInherited(ZombieBase) || (obj.IsInherited(AnimalBase) && !IsAllowedAnimal(obj)))
             {
-                if (obj.IsInherited(DayZInfected) || obj.IsInherited(AnimalBase))
-                {
-                    EntityAI entity = EntityAI.Cast(obj);
-                    
-                    // Set the entity's health to 0 to kill it
-                    entity.SetHealth("", "", 0.0);
-                }
+                // Notify the server of entities to kill in the location. The server will have to check again using a similar method and kill them accordingly.
+                // (use RPC)
             }
         }
     }
 
     bool IsAllowedAnimal(Object animal)
     {
-        string className = animal.GetType();
-        return settings.AllowedAnimals.Find(className) != -1;
+        foreach(string allowedAnimal : settings.allowedAnimals)
+        {
+            if(CF_String.EqualsIgnoreCase(allowedAnimal,animal.GetType()))
+                return true;
+        }
+        return false;
     }
 
+    //to remove
     vector GetTeleportPosition()
     {
         // Define a specific position far away from the safe zone where unwanted entities will be teleported

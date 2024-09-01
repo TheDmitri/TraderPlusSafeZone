@@ -1,11 +1,11 @@
 class SafeZoneLocation
 {   
-    bool isActive;
     int id;
+    // this value can deactivate the safezone
+    bool isActive;
     string name;
     vector position;
     int radius;
-
 
     void SafeZoneLocation(bool isActive,int id, string name, vector position, int radius)
     {

@@ -1,18 +1,18 @@
 class SafeZoneSettings //Basic settings for .json configg file.
 {
-    bool RestrictNPCInSafeZone = true;
-    bool RestrictWeapons = true;
-    int NotificationTimer = 10; 
-    string NotificationTitle = "SafeZone";
+    bool isEntitiesCleanActive = true;
+
+    int notificationTimer = 10; 
+    string notificationTitle = "SafeZone";
     string msgOnEnteringZone = "You entered the safezone!";
     string msgOnLeavingZone = "You have left the safezone!";
     ref array<ref SafeZoneLocation> locations;
-    ref array<string> AllowedAnimals; // Array containing animal classes that are allowed to be spawned in the safezone.
+    ref array<string> allowedAnimals; // Array containing animal classes that are allowed to be spawned in the safezone.
     
     void SafeZoneSettings() // Default constructor location class variable. 
     {
         locations = new array<ref SafeZoneLocation>();
-        AllowedAnimals = new array<string>();
+        allowedAnimals = new array<string>();
     }
 
     void DefaultSettings() // Basic default config input as place holder to make sure the mod works.
@@ -41,7 +41,7 @@ class SafeZoneSettings //Basic settings for .json configg file.
         }
     }
 
-    static ref SafeZoneSettings Load() // Loads the config file.
+    static SafeZoneSettings Load() // Loads the config file.
     {
         SafeZoneSettings settings = new SafeZoneSettings();
         
@@ -55,6 +55,5 @@ class SafeZoneSettings //Basic settings for .json configg file.
 
         settings.DefaultSettings();
         return settings;
-
     }
 }
