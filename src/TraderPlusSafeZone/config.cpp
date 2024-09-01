@@ -62,7 +62,3 @@ class CfgMods
 		};
 	};
 };
-class CfgVehicles
-{
-
-};
