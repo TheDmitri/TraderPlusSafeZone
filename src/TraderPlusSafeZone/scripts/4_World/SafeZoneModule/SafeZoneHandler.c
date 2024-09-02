@@ -104,6 +104,7 @@ class SafeZoneHandler
             {
                 // Notify the server of entities to kill in the location. The server will have to check again using a similar method and kill them accordingly.
                 // (use RPC)
+                //review: I would suggest to call it more like EntitiesCleanUpRequest and pass the selectedLocation then redo a entitycheck in the server and delete them.
                 GetRPCManager().SendRPC("TraderPlusSafeZone", "RemoveEntity", new Param1<Object>(obj), true, null); // This is to remove the entity from the safezone RPC call.
             }
         }

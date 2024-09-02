@@ -39,12 +39,16 @@ class SafeZoneModule: CF_ModuleWorld ///: CF_ModuleWorld derivetive created with
         if(GetGame().IsServer())
         {
             GetRPCManager().AddRPC("TraderPlusSafeZone", "GetSafeZoneStatus", this, SingleplayerExecutionType.Server );
-            GetRPCManager().AddRPC("TraderPlusSafeZone", "RemoveEntity", this, SingleplayerExecutionType.Server ); // This is for the client.
+
+            //review: that's good
+            GetRPCManager().AddRPC("TraderPlusSafeZone", "RemoveEntity", this, SingleplayerExecutionType.Server ); // This is for the client. => no this section register it for the client
         }
         else
         {
             GetRPCManager().AddRPC("TraderPlusSafeZone", "GetConfigFromServer", this, SingleplayerExecutionType.Client );
-            GetRPCManager().AddRPC("TraderPlusSafeZone", "RemoveEntity", this, SingleplayerExecutionType.Client );// This is for the server.
+
+            //review: why do you create a rpc for the  for the client as we only wnat to call the method from the client to the server
+            GetRPCManager().AddRPC("TraderPlusSafeZone", "RemoveEntity", this, SingleplayerExecutionType.Client );// This is for the server. => no this section register it for the server
         }
     }
 
@@ -80,6 +84,8 @@ class SafeZoneModule: CF_ModuleWorld ///: CF_ModuleWorld derivetive created with
     }
 
 
+    //what is this?
+    //if you are doing attemot, make sure to either comment the methods or notify by using comments it'snot suppose to stay
       void RemoveEntityHandler(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target) //Removes an entity from the game on server.
       {
           if(type != CallType.Server)
@@ -98,17 +104,18 @@ class SafeZoneModule: CF_ModuleWorld ///: CF_ModuleWorld derivetive created with
 
       void RemoveEntity(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target) //Removes an entity from the game on server.
       {
-          if(type != CallType.Server)
+          if(type != CallType.Server) // if the type is not server, return
               return;
 
-          Param1<Object> data;
+          Param1<Object> data; // I wouldn't pass the object which is the entity found but the safezone location itself that way we can rewrite a check for entity in this section and kill all of them
           if(!ctx.Read(data))
               return;
 
           Object objectToRemove = data.param1;
           if(!objectToRemove)
               return;
-    
+          
+          // to redo based on the parameter change
           bool IsInSafeZone = false;
           foreach(SafeZoneLocation location: settings.locations)
           {
