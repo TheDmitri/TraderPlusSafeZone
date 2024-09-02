@@ -90,38 +90,32 @@ class SafeZoneHandler
         return distance <= radius;
     }   
 
-    void RemoveUnwantedEntities()
+    void RemoveUnwantedEntities() // This is to clean up the entities in the safezone.
     {
-        if (!selectedLocation || !settings.isEntitiesCleanActive)
+        if (!selectedLocation || !selectedLocation.isEntitiesCleanActive) // If the location is not active or the clean up is not active, return.
             return;
 
-        array<Object> nearbyObjects = new array<Object>();
-        GetGame().GetObjectsAtPosition(selectedLocation.position, selectedLocation.radius, nearbyObjects);
+        array<Object> safeZoneCleanUpList = new array<Object>();
+        GetGame().GetObjectsAtPosition(selectedLocation.position, selectedLocation.radius, safeZoneCleanUpList,null);
 
-        foreach (Object obj : nearbyObjects)
+        foreach (Object obj : safeZoneCleanUpList)
         {
-            if (obj.IsInherited(ZombieBase) || (obj.IsInherited(AnimalBase) && !IsAllowedAnimal(obj)))
+            if (obj.IsInherited(ZombieBase) || (obj.IsInherited(AnimalBase) && !IsAllowedAnimal(obj, selectedLocation)))
             {
                 // Notify the server of entities to kill in the location. The server will have to check again using a similar method and kill them accordingly.
                 // (use RPC)
+                GetRPCManager().SendRPC("TraderPlusSafeZone", "RemoveEntity", new Param1<Object>(obj), true, null); // This is to remove the entity from the safezone RPC call.
             }
         }
     }
 
-    bool IsAllowedAnimal(Object animal)
+    bool IsAllowedAnimal(Object animal, SafeZoneLocation location) // This is to check if the animal is allowed in the safezone.
     {
-        foreach(string allowedAnimal : settings.allowedAnimals)
+        foreach(string allowedAnimal : location.allowedAnimals)
         {
-            if(CF_String.EqualsIgnoreCase(allowedAnimal,animal.GetType()))
+            if(CF_String.EqualsIgnoreCase(allowedAnimal, animal.GetType()))
                 return true;
         }
         return false;
-    }
-
-    //to remove
-    vector GetTeleportPosition()
-    {
-        // Define a specific position far away from the safe zone where unwanted entities will be teleported
-        return Vector(10000, 0, 10000); // Adjust the coordinates as needed
     }
 }
