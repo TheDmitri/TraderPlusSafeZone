@@ -26,7 +26,7 @@ class SafeZoneHandler
         return hasStarted;
     }
 
-    void Setup(SafeZoneSettings settings)
+    void Setup(SafeZoneSettings settings) // Sets up the safe zone handler with the given settings.
     {
         this.settings = settings;
 
@@ -43,23 +43,23 @@ class SafeZoneHandler
         CheckSafeZoneLocation();
     }
 
-    void CheckSafeZoneLocation()
+    void CheckSafeZoneLocation() // Checks the player's position against the safe zone locations.
     {
-        foreach(SafeZoneLocation location: settings.locations)
+        foreach(SafeZoneLocation location: settings.locations) 
         if(location.isActive)// Only Check Active Locations
         {
             CheckSafeZoneLocation(location);
         }
     }
 
-    void OnEnterSafeZone()
+    void OnEnterSafeZone() // Called when the player enters a safe zone - showing a notification of entering the safezone.
     {
         isInZone = true;
         NotificationSystem.AddNotificationExtended( settings.notificationTimer, settings.notificationTitle, settings.msgOnEnteringZone, "TraderPlusSafeZone/datasets/shield.paa" );
         GetRPCManager().SendRPC("TraderPlusSafeZone", "GetSafeZoneStatus", new Param1<bool>(isInZone), true, null);
     }
 
-    void OnExitSafeZone()
+    void OnExitSafeZone() // Called when the player exits a safe zone - showing a notification of exiting the safezone.
     {
         isInZone = false;
         selectedLocation = null;
@@ -67,7 +67,7 @@ class SafeZoneHandler
         GetRPCManager().SendRPC("TraderPlusSafeZone", "GetSafeZoneStatus", new Param1<bool>(isInZone), true, null);
     }
 
-    void CheckSafeZoneLocation(SafeZoneLocation location)
+    void CheckSafeZoneLocation(SafeZoneLocation location) // This is to check if the player is in the safezone.
     {
         bool IsCurrentlyInZone = IsInRadius(location.position, location.radius);
 
@@ -82,7 +82,7 @@ class SafeZoneHandler
         }
     }
 
-    bool IsInRadius(vector position, int radius)
+    bool IsInRadius(vector position, int radius) // This is to check if the player is in the safezone.
     {
         vector playerPos = Vector(GetPlayer().GetPosition()[0], 0, GetPlayer().GetPosition()[2]);
         vector safeZonePos = Vector(position[0], 0, position[2]);
@@ -102,10 +102,7 @@ class SafeZoneHandler
         {
             if (obj.IsInherited(ZombieBase) || (obj.IsInherited(AnimalBase) && !IsAllowedAnimal(obj, selectedLocation)))
             {
-                // Notify the server of entities to kill in the location. The server will have to check again using a similar method and kill them accordingly.
-                // (use RPC)
-                //review: I would suggest to call it more like EntitiesCleanUpRequest and pass the selectedLocation then redo a entitycheck in the server and delete them.
-                GetRPCManager().SendRPC("TraderPlusSafeZone", "RemoveEntity", new Param1<Object>(obj), true, null); // This is to remove the entity from the safezone RPC call.
+                GetRPCManager().SendRPC("TraderPlusSafeZone", "EntitiesCleanUpRequest", new Param1<SafeZoneLocation>(selectedLocation), true, null); //RPC call from client to server.
             }
         }
     }

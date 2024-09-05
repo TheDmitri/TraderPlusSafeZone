@@ -41,14 +41,11 @@ class SafeZoneModule: CF_ModuleWorld ///: CF_ModuleWorld derivetive created with
             GetRPCManager().AddRPC("TraderPlusSafeZone", "GetSafeZoneStatus", this, SingleplayerExecutionType.Server );
 
             //review: that's good
-            GetRPCManager().AddRPC("TraderPlusSafeZone", "RemoveEntity", this, SingleplayerExecutionType.Server ); // This is for the client. => no this section register it for the client
+            GetRPCManager().AddRPC("TraderPlusSafeZone", "EntitiesCleanUpRequest", this, SingleplayerExecutionType.Server ); // This is for the client. => no this section register it for the client
         }
         else
         {
             GetRPCManager().AddRPC("TraderPlusSafeZone", "GetConfigFromServer", this, SingleplayerExecutionType.Client );
-
-            //review: why do you create a rpc for the  for the client as we only wnat to call the method from the client to the server
-            GetRPCManager().AddRPC("TraderPlusSafeZone", "RemoveEntity", this, SingleplayerExecutionType.Client );// This is for the server. => no this section register it for the server
         }
     }
 
@@ -82,74 +79,51 @@ class SafeZoneModule: CF_ModuleWorld ///: CF_ModuleWorld derivetive created with
 
         ApplyConditionBasedOnStatus(player);
     }
-
-
-    //what is this?
-    //if you are doing attemot, make sure to either comment the methods or notify by using comments it'snot suppose to stay
-      void RemoveEntityHandler(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target) //Removes an entity from the game on server.
-      {
-          if(type != CallType.Server)
-              return;
-
-          Param1<Object> data;
-          if(!ctx.Read(data))
-              return;
-
-          Object objectToRemove = data.param1;
-          if(!objectToRemove)
-              return;
-
-          RemoveEntity(type, ctx, sender, target);
-      }
-
-      void RemoveEntity(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target) //Removes an entity from the game on server.
-      {
-          if(type != CallType.Server) // if the type is not server, return
-              return;
-
-          Param1<Object> data; // I wouldn't pass the object which is the entity found but the safezone location itself that way we can rewrite a check for entity in this section and kill all of them
-          if(!ctx.Read(data))
-              return;
-
-          Object objectToRemove = data.param1;
-          if(!objectToRemove)
-              return;
-          
-          // to redo based on the parameter change
-          bool IsInSafeZone = false;
-          foreach(SafeZoneLocation location: settings.locations)
-          {
-              if(location.isActive && IsInRadius(objectToRemove, location))
-              {
-                  IsInSafeZone = true;
-                  break;
-              }
-          }
-
-          if(IsInSafeZone && (objectToRemove.IsInherited(ZombieBase) || (objectToRemove.IsInherited(AnimalBase) && !IsAllowedAnimal(objectToRemove, location)))) // If the object is in a safe zone and is a zombie or an animal that is not allowed, remove it.
-          {
-              GetGame().ObjectDelete(objectToRemove);
-          }
-      }
     
-      bool IsInRadius(Object obj, SafeZoneLocation location)// Checks if an object is in the radius of a safe zone location.
-      {
-          vector objectPos = obj.GetPosition();
-          vector flatObjectPos = Vector(objectPos[0], 0, objectPos[2]);
-          vector flatZonePos = Vector(location.position[0], 0, location.position[2]);
-          float distance = vector.Distance(flatObjectPos, flatZonePos);
-          return distance <= location.radius;
-      }
+    void EntitiesCleanUpRequest(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
+    {
+        if(type != CallType.Server)
+            return;
+
+        Param1<SafeZoneLocation> data;
+        if(!ctx.Read(data))
+            return;
+
+        SafeZoneLocation location = data.param1;
+        if(!location)
+            return;
+
+        array<Object> safeZoneCleanUpList = new array<Object>();
+        GetGame().GetObjectsAtPosition(location.position, location.radius, safeZoneCleanUpList, null);
+
+        foreach (Object obj : safeZoneCleanUpList)
+        {
+            if (IsInRadius(obj, location) && (obj.IsInherited(ZombieBase) || (obj.IsInherited(AnimalBase) && !IsAllowedAnimal(obj, location))))
+            {
+                GetGame().ObjectDelete(obj);
+            }
+        }
+    }
     
-      bool IsAllowedAnimal(Object animal, SafeZoneLocation location) // Checks if an animal is allowed in a safe zone location.
-      {
-          foreach(string allowedAnimal : location.allowedAnimals)
-          {
-              if(CF_String.EqualsIgnoreCase(allowedAnimal, animal.GetType()))
-                  return true;
-          }
-          return false;
-      }
+    bool IsInRadius(Object obj, SafeZoneLocation location)
+    {
+        vector objectPos = obj.GetPosition();
+        vector flatObjectPos = Vector(objectPos[0], 0, objectPos[2]);
+        vector flatZonePos = Vector(location.position[0], 0, location.position[2]);
+        float distance = vector.Distance(flatObjectPos, flatZonePos);
+        return distance <= location.radius;
+    }
+    
+    
+    bool IsAllowedAnimal(Object animal, SafeZoneLocation location)
+    {
+        foreach(string allowedAnimal : location.allowedAnimals)
+        {
+            if(CF_String.EqualsIgnoreCase(allowedAnimal, animal.GetType()))
+                return true;
+        }
+        return false;
+    }
     
 
     void ApplyConditionBasedOnStatus(PlayerBase player) // Applies a condition based on the player's safe zone status.
