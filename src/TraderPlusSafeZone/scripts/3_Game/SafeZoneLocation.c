@@ -9,7 +9,7 @@ class SafeZoneLocation
     ref array<string> allowedAnimals; // Array containing the names of the animals that are allowed in the safe zone when clean up is active.
 
 
-    void SafeZoneLocation(bool isActive,int id, string name, vector position, int radius, bool isEntitiesCleanActive, array<string> allowedAnimals)
+    void SafeZoneLocation(bool isActive, int id, string name, vector position, int radius, bool isEntitiesCleanActive, array<string> allowedAnimals)
     {
         this.isActive = isActive;
         this.id = id;
