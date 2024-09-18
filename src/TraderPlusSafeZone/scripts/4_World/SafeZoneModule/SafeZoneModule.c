@@ -39,6 +39,9 @@ class SafeZoneModule: CF_ModuleWorld ///: CF_ModuleWorld derivetive created with
         if(GetGame().IsServer())
         {
             GetRPCManager().AddRPC("TraderPlusSafeZone", "GetSafeZoneStatus", this, SingleplayerExecutionType.Server );
+
+            //review: that's good
+            GetRPCManager().AddRPC("TraderPlusSafeZone", "EntitiesCleanUpRequest", this, SingleplayerExecutionType.Server ); // This is for the client. => no this section register it for the client
         }
         else
         {
@@ -76,8 +79,54 @@ class SafeZoneModule: CF_ModuleWorld ///: CF_ModuleWorld derivetive created with
 
         ApplyConditionBasedOnStatus(player);
     }
+    
+    void EntitiesCleanUpRequest(CallType type, ParamsReadContext ctx, PlayerIdentity sender, Object target)
+    {
+        if(type != CallType.Server)
+            return;
 
-    void ApplyConditionBasedOnStatus(PlayerBase player)
+        Param1<SafeZoneLocation> data;
+        if(!ctx.Read(data))
+            return;
+
+        SafeZoneLocation location = data.param1;
+        if(!location)
+            return;
+
+        array<Object> safeZoneCleanUpList = new array<Object>();
+        GetGame().GetObjectsAtPosition(location.position, location.radius, safeZoneCleanUpList, null);
+
+        foreach (Object obj : safeZoneCleanUpList)
+        {
+            if (IsInRadius(obj, location) && (obj.IsInherited(ZombieBase) || (obj.IsInherited(AnimalBase) && !IsAllowedAnimal(obj, location))))
+            {
+                GetGame().ObjectDelete(obj);
+            }
+        }
+    }
+    
+    bool IsInRadius(Object obj, SafeZoneLocation location)
+    {
+        vector objectPos = obj.GetPosition();
+        vector flatObjectPos = Vector(objectPos[0], 0, objectPos[2]);
+        vector flatZonePos = Vector(location.position[0], 0, location.position[2]);
+        float distance = vector.Distance(flatObjectPos, flatZonePos);
+        return distance <= location.radius;
+    }
+    
+    
+    bool IsAllowedAnimal(Object animal, SafeZoneLocation location)
+    {
+        foreach(string allowedAnimal : location.allowedAnimals)
+        {
+            if(CF_String.EqualsIgnoreCase(allowedAnimal, animal.GetType()))
+                return true;
+        }
+        return false;
+    }
+    
+
+    void ApplyConditionBasedOnStatus(PlayerBase player) // Applies a condition based on the player's safe zone status.
     {
         if(player.IsInSafeZone())
         {

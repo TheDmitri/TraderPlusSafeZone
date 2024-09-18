@@ -1,25 +1,21 @@
 class SafeZoneSettings //Basic settings for .json configg file.
 {
-    bool isEntitiesCleanActive = true;
-
     int notificationTimer = 10; 
     string notificationTitle = "SafeZone";
     string msgOnEnteringZone = "You entered the safezone!";
     string msgOnLeavingZone = "You have left the safezone!";
-    ref array<ref SafeZoneLocation> locations;
-    ref array<string> allowedAnimals; // Array containing animal classes that are allowed to be spawned in the safezone.
-    
+    ref array<ref SafeZoneLocation> locations;    
+
     void SafeZoneSettings() // Default constructor location class variable. 
     {
         locations = new array<ref SafeZoneLocation>();
-        allowedAnimals = new array<string>();
     }
 
     void DefaultSettings() // Basic default config input as place holder to make sure the mod works.
     {
-        locations.Insert(new SafeZoneLocation(true,1, "Kamenka", Vector(1755.869995, 5.822320, 2204.840088), 100));
-        locations.Insert(new SafeZoneLocation(true,2, "Ostrog", Vector(2645.508057, 121.447723, 2202.255127), 100));
-        locations.Insert(new SafeZoneLocation(true,3, "Mys Krutoy", Vector(13646.174805, 25.352015, 3890.636475), 100));
+        locations.Insert(new SafeZoneLocation(true, 1, "Kamenka", Vector(1755.869995, 5.822320, 2204.840088), 100, true, new array<string>));
+        locations.Insert(new SafeZoneLocation(true, 2, "Ostrog", Vector(2645.508057, 121.447723, 2202.255127), 100, true, new array<string>));
+        locations.Insert(new SafeZoneLocation(true, 3, "Mys Krutoy", Vector(13646.174805, 25.352015, 3890.636475), 100, true, new array<string>));
         SaveSettings();
     }
 
